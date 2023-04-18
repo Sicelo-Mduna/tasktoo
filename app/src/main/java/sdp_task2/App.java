@@ -31,45 +31,46 @@ public class App {
             // Get a list of all the child nodes of the root element
             NodeList nodeList = doc.getDocumentElement().getChildNodes();
 
-            // Get user-selected fields to output
-            Scanner scanner = new Scanner(System.in);
-            String input = "";
-            String[] fields = null;
-            boolean validInput = false;
-            while (!validInput) {
-                System.out.println("Enter field names to output (comma-separated):");
-                input = scanner.nextLine().trim();
-                fields = input.split(",");
-                validInput = true;
-                for (String field : fields) {
-                    if (!nodeListContainsField(nodeList, field.trim())) {
-                        System.out.println("Invalid field name: " + field);
-                        validInput = false;
-                        break;
-                    }
-                }
-            }
-
-            // Create a map to store the selected fields and their values
-            Map<String, String> fieldValues = new HashMap<String, String>();
-
-            // Loop through the child nodes and add the selected fields to the map
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                Node node = nodeList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    String nodeName = node.getNodeName();
+            try (// Get user-selected fields to output
+            Scanner scanner = new Scanner(System.in)) {
+                String input = "";
+                String[] fields = null;
+                boolean validInput = false;
+                while (!validInput) {
+                    System.out.println("Enter field names to output (comma-separated):");
+                    input = scanner.nextLine().trim();
+                    fields = input.split(",");
+                    validInput = true;
                     for (String field : fields) {
-                        if (nodeName.equals(field.trim())) {
-                            fieldValues.put(nodeName, node.getTextContent());
+                        if (!nodeListContainsField(nodeList, field.trim())) {
+                            System.out.println("Invalid field name: " + field);
+                            validInput = false;
                             break;
                         }
                     }
                 }
-            }
 
-            // Convert the map to a JSONObject and output it in JSON format
-            JSONObject jsonObject = new JSONObject(fieldValues);
-            System.out.println(jsonObject.toString());
+                // Create a map to store the selected fields and their values
+                Map<String, String> fieldValues = new HashMap<String, String>();
+
+                // Loop through the child nodes and add the selected fields to the map
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        String nodeName = node.getNodeName();
+                        for (String field : fields) {
+                            if (nodeName.equals(field.trim())) {
+                                fieldValues.put(nodeName, node.getTextContent());
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Convert the map to a JSONObject and output it in JSON format
+                JSONObject jsonObject = new JSONObject(fieldValues);
+                System.out.println(jsonObject.toString());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,6 +84,10 @@ public class App {
             }
         }
         return false;
+    }
+
+    public Object getGreeting() {
+        return null;
     }
 }
 
