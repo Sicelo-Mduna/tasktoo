@@ -1,6 +1,7 @@
 package sdp_task2;
 
 import java.io.File;
+import java.util.Scanner;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import org.w3c.dom.Document;
@@ -25,18 +26,25 @@ public class App {
             // Normalize the Document object to ensure that it is in a consistent state
             doc.getDocumentElement().normalize();
 
-            // Get the root element of the XML document
-            String rootElement = doc.getDocumentElement().getNodeName();
-            System.out.println("Root element: " + rootElement);
-
             // Get a list of all the child nodes of the root element
             NodeList nodeList = doc.getDocumentElement().getChildNodes();
 
-            // Loop through the child nodes and print out the field values
+            // Get user-selected fields to output
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Enter field names to output (comma-separated):");
+            String[] fields = scanner.nextLine().split(",");
+
+            // Loop through the child nodes and print out the selected fields
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    System.out.println(node.getNodeName() + ": " + node.getTextContent());
+                    String nodeName = node.getNodeName();
+                    for (String field : fields) {
+                        if (nodeName.equals(field.trim())) {
+                            System.out.println(nodeName + ": " + node.getTextContent());
+                            break;
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
@@ -44,4 +52,5 @@ public class App {
         }
     }
 }
+
 
