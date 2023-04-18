@@ -1,6 +1,8 @@
 package sdp_task2;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
@@ -34,23 +36,35 @@ public class App {
             System.out.println("Enter field names to output (comma-separated):");
             String[] fields = scanner.nextLine().split(",");
 
-            // Loop through the child nodes and print out the selected fields
+            // Create a map to store the selected fields and their values
+            Map<String, String> fieldValues = new HashMap<String, String>();
+
+            // Loop through the child nodes and add the selected fields to the map
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     String nodeName = node.getNodeName();
                     for (String field : fields) {
                         if (nodeName.equals(field.trim())) {
-                            System.out.println(nodeName + ": " + node.getTextContent());
+                            fieldValues.put(nodeName, node.getTextContent());
                             break;
                         }
                     }
                 }
             }
+
+            // Convert the map to a JSONObject and output it in JSON format
+            JSONObject jsonObject = new JSONObject(fieldValues);
+            System.out.println(jsonObject.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    public Object getGreeting() {
+        return null;
+    }
 }
+
 
 
