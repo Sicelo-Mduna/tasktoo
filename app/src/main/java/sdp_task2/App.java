@@ -4,11 +4,10 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class App {
     public static void main(String[] args) {
@@ -16,80 +15,104 @@ public class App {
             // Specify the file path of the XML file to read
             File inputFile = new File("data.xml");
 
-            // Create a DocumentBuilderFactory object
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            // Create a SAXParserFactory object
+            SAXParserFactory factory = SAXParserFactory.newInstance();
 
-            // Create a DocumentBuilder object
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            // Create a SAXParser object
+            SAXParser saxParser = factory.newSAXParser();
 
-            // Use the DocumentBuilder to parse the input file and create a Document object
-            Document doc = dBuilder.parse(inputFile);
+            // Create a ContentHandler object to handle SAX events
+            CustomContentHandler handler = new CustomContentHandler();
 
-            // Normalize the Document object to ensure that it is in a consistent state
-            doc.getDocumentElement().normalize();
-
-            // Get a list of all the child nodes of the root element
-            NodeList nodeList = doc.getDocumentElement().getChildNodes();
-
-            try (// Get user-selected fields to output
-            Scanner scanner = new Scanner(System.in)) {
-                String input = "";
-                String[] fields = null;
-                boolean validInput = false;
-                while (!validInput) {
-                    System.out.println("Enter field names to output (comma-separated):");
-                    input = scanner.nextLine().trim();
-                    fields = input.split(",");
-                    validInput = true;
-                    for (String field : fields) {
-                        if (!nodeListContainsField(nodeList, field.trim())) {
-                            System.out.println("Invalid field name: " + field);
-                            validInput = false;
-                            break;
-                        }
+            // Set user-selected fields to output
+            Scanner scanner = new Scanner(System.in);
+            String input = "";
+            String[] fields = null;
+            boolean validInput = false;
+            while (!validInput) {
+                System.out.println("Enter field names to output (comma-separated):");
+                input = scanner.nextLine().trim();
+                fields = input.split(",");
+                validInput = true;
+                for (String field : fields) {
+                    if (field.isEmpty()) {
+                        System.out.println("Invalid field name: " + field);
+                        validInput = false;
+                        break;
                     }
                 }
-
-                // Create a map to store the selected fields and their values
-                Map<String, String> fieldValues = new HashMap<String, String>();
-
-                // Loop through the child nodes and add the selected fields to the map
-                for (int i = 0; i < nodeList.getLength(); i++) {
-                    Node node = nodeList.item(i);
-                    if (node.getNodeType() == Node.ELEMENT_NODE) {
-                        String nodeName = node.getNodeName();
-                        for (String field : fields) {
-                            if (nodeName.equals(field.trim())) {
-                                fieldValues.put(nodeName, node.getTextContent());
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Convert the map to a JSONObject and output it in JSON format
-                JSONObject jsonObject = new JSONObject(fieldValues);
-                System.out.println(jsonObject.toString());
             }
+            handler.setFields(fields);
+
+            // Parse the input file and handle SAX events
+            saxParser.parse(inputFile, handler);
+
+            // Get the map of selected fields and their values from the ContentHandler object
+            Map<String, String> fieldValues = handler.getFieldValues();
+
+            // Convert the map to a JSONObject and output it in JSON format
+            JSONObject jsonObject = new JSONObject(fieldValues);
+            System.out.println(jsonObject.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static boolean nodeListContainsField(NodeList nodeList, String field) {
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node node = nodeList.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(field)) {
-                return true;
+    private static class CustomContentHandler extends DefaultHandler {
+        private Map<String, String> fieldValues;
+        private String[] fields;
+        private String currentField;
+        private boolean isFieldSelected;
+
+        public CustomContentHandler() {
+            fieldValues = new HashMap<String, String>();
+            fields = null;
+            currentField = null;
+            isFieldSelected = false;
+        }
+
+        public void setFields(String[] fields) {
+            this.fields = fields;
+        }
+
+        public Map<String, String> getFieldValues() {
+            return fieldValues;
+        }
+
+        @Override
+        public void startElement(String uri, String localName, String qName, Attributes attributes) {
+            currentField = qName;
+            isFieldSelected = containsField(currentField);
+        }
+
+        @Override
+        public void characters(char[] ch, int start, int length) {
+            if (isFieldSelected) {
+                String value = new String(ch, start, length).trim();
+                if (value.length() > 0) {
+                    fieldValues.put(currentField, value);
+                }
             }
         }
-        return false;
+
+        private boolean containsField(String field) {
+            if (fields == null) {
+                return true;
+            }
+            for (String selectedField : fields) {
+                if (selectedField.equals(field)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public Object getGreeting() {
         return null;
     }
 }
+
 
 
 
