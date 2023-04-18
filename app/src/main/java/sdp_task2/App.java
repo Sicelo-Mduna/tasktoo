@@ -33,8 +33,22 @@ public class App {
 
             // Get user-selected fields to output
             Scanner scanner = new Scanner(System.in);
-            System.out.println("Enter field names to output (comma-separated):");
-            String[] fields = scanner.nextLine().split(",");
+            String input = "";
+            String[] fields = null;
+            boolean validInput = false;
+            while (!validInput) {
+                System.out.println("Enter field names to output (comma-separated):");
+                input = scanner.nextLine().trim();
+                fields = input.split(",");
+                validInput = true;
+                for (String field : fields) {
+                    if (!nodeListContainsField(nodeList, field.trim())) {
+                        System.out.println("Invalid field name: " + field);
+                        validInput = false;
+                        break;
+                    }
+                }
+            }
 
             // Create a map to store the selected fields and their values
             Map<String, String> fieldValues = new HashMap<String, String>();
@@ -61,10 +75,17 @@ public class App {
         }
     }
 
-    public Object getGreeting() {
-        return null;
+    private static boolean nodeListContainsField(NodeList nodeList, String field) {
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(field)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
+
 
 
 
